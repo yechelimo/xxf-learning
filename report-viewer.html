@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分析报告详情</title>
+<style>
+:root {
+  --primary: #3b82f6; --text: #1e293b; --text-secondary: #64748b;
+  --border: #e2e8f0; --bg: #f8fafc;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #fff; color: var(--text); line-height: 1.8;
+  max-width: 800px; margin: 0 auto; padding: 40px 24px;
+}
+h1 { font-size: 24px; margin-bottom: 4px; }
+h2 { font-size: 18px; margin: 24px 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--primary); }
+h3 { font-size: 15px; margin: 16px 0 8px; color: var(--primary); }
+.subtitle { color: var(--text-secondary); font-size: 14px; margin-bottom: 20px; }
+.meta { display: flex; gap: 24px; flex-wrap: wrap; margin: 16px 0; padding: 14px; background: var(--bg); border-radius: 8px; }
+.meta-item { text-align: center; }
+.meta-value { font-size: 20px; font-weight: 700; color: var(--primary); }
+.meta-label { font-size: 11px; color: var(--text-secondary); }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 13px; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { background: var(--bg); font-weight: 600; }
+.box { background: var(--bg); padding: 16px; border-radius: 8px; margin: 12px 0; }
+.box h4 { font-size: 14px; margin-bottom: 8px; color: var(--primary); }
+.box ul { padding-left: 20px; font-size: 13px; color: var(--text-secondary); }
+.box li { margin: 4px 0; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; margin: 2px; }
+.tag-blue { background: #dbeafe; color: #1e40af; }
+.no-print { text-align: center; padding: 20px 0; }
+@media print {
+  .no-print { display: none; }
+  body { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="no-print" style="display:flex;gap:12px;align-items:center;margin-bottom:20px;">
+  <a href="profile.html" style="color:var(--primary);text-decoration:none;">← 返回学生简介</a>
+  <button onclick="window.print()" style="padding:8px 20px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;">🖨 打印 / 保存为 PDF</button>
+</div>
+
+<div id="reportContent"></div>
+
+<script>
+var reportId = new URLSearchParams(window.location.search).get('id');
+
+var reports = {
+  'market-basket': {
+    title: '超市购物篮关联规则分析报告',
+    subtitle: '基于 Apriori 算法的商品关联挖掘与营销策略建议',
+    date: '2026年5月',
+    stats: [
+      { label: '交易总数', value: '747 笔' },
+      { label: '商品类别', value: '195 个' },
+      { label: '频繁项集', value: '3,557 个' },
+      { label: '关联规则', value: '10,548 条' },
+      { label: '强关联规则', value: '129 条' }
+    ],
+    sections: [
+      { title: '一、分析概述', content: '<p>购物篮分析（Market Basket Analysis）是零售行业中广泛使用的数据挖掘技术，通过分析顾客购物车中商品的组合关系，发现商品之间的关联规则。本报告基于超市747笔真实交易数据，采用 Apriori 算法挖掘频繁项集和关联规则，为货架布局、捆绑促销、交叉销售和库存管理提供数据支撑。</p><p>核心指标：<strong>支持度</strong>（商品组合在所有交易中出现的频率）、<strong>置信度</strong>（购买前项后同时购买后项的概率）、<strong>提升度</strong>（关联强度，>1表示正相关）。</p>' },
+      { title: '二、商品购买频率分析', content: '<p>以下为购买频率最高的10个商品类别。饮料以76.84%的购买率高居榜首，显示其作为超市绝对引流商品的地位。</p>' +
+        '<table><tr><th>排名</th><th>商品类别</th><th>购买次数</th><th>购买频率</th></tr>' +
+        '<tr><td>1</td><td>饮料</td><td>574</td><td><strong>76.84%</strong></td></tr>' +
+        '<tr><td>2</td><td>散装休闲食品</td><td>375</td><td>50.20%</td></tr>' +
+        '<tr><td>3</td><td>香烟</td><td>366</td><td>49.00%</td></tr>' +
+        '<tr><td>4</td><td>常温熟食类</td><td>365</td><td>48.86%</td></tr>' +
+        '<tr><td>5</td><td>进口食品</td><td>329</td><td>44.04%</td></tr>' +
+        '<tr><td>6</td><td>糖果巧克力</td><td>327</td><td>43.78%</td></tr>' +
+        '<tr><td>7</td><td>调味品</td><td>276</td><td>36.95%</td></tr>' +
+        '<tr><td>8</td><td>即食主食</td><td>276</td><td>36.95%</td></tr>' +
+        '<tr><td>9</td><td>冷藏乳制品</td><td>248</td><td>33.20%</td></tr>' +
+        '<tr><td>10</td><td>饼干</td><td>248</td><td>33.20%</td></tr></table>' },
+      { title: '三、商品共现分析', content: '<p>商品共现分析揭示了哪些商品经常被顾客同时购买：</p>' +
+        '<div class="box"><ul>' +
+        '<li><strong>饮料 + 常温熟食</strong>：共现337次，共现率45.11%，是最强商品组合</li>' +
+        '<li><strong>饮料 + 散装休闲食品</strong>：共现328次，共现率43.91%</li>' +
+        '<li><strong>饮料 + 香烟</strong>：共现311次，共现率41.63%</li>' +
+        '<li><strong>饮料 + 进口食品</strong>：共现307次，共现率41.10%</li></ul></div>' +
+        '<p>饮料作为第一高频商品，与几乎所有其他高频商品均存在强共现关系，是超市最重要的流量入口。</p>' },
+      { title: '四、关联规则分析', content: '<p>在最低支持度2%、最低置信度30%的条件下，共发现3,557个频繁项集和10,548条关联规则。以下为提升度最高的15条规则：</p>' +
+        '<table><tr><th>#</th><th>前项商品</th><th>后项商品</th><th>支持度</th><th>置信度</th><th>提升度</th></tr>' +
+        '<tr><td>1</td><td>菜肴半成品 + 冷藏素食制品</td><td>杂粮</td><td>2.01%</td><td>68.18%</td><td><strong>4.01</strong></td></tr>' +
+        '<tr><td>2</td><td>啤酒 + 冷藏熟食</td><td>中式糕点</td><td>2.14%</td><td>57.14%</td><td><strong>3.95</strong></td></tr>' +
+        '<tr><td>3</td><td>休闲小食品 + 冷冻面点</td><td>中式糕点</td><td>2.28%</td><td>56.67%</td><td><strong>3.92</strong></td></tr>' +
+        '<tr><td>4</td><td>油 + 饼干</td><td>炒货食品</td><td>2.81%</td><td>72.41%</td><td><strong>3.58</strong></td></tr>' +
+        '<tr><td>5</td><td>米 + 冲饮食品</td><td>滋补保健品</td><td>2.14%</td><td>61.54%</td><td><strong>3.77</strong></td></tr></table>' },
+      { title: '五、营销策略建议', content:
+        '<div class="box"><h4>货架布局优化</h4><ul><li>饮料+常温熟食相邻摆放（共现率45%）</li><li>散装休闲食品与饮料组合陈列</li><li>香烟柜台附近放置小包装休闲食品</li><li>调味品区与冷藏乳制品联动陈列</li></ul></div>' +
+        '<div class="box"><h4>捆绑促销策略</h4><ul><li>“便捷晚餐”：菜肴半成品+冷藏素食+杂粮（置信度68%）</li><li>“休闲时光”：啤酒+冷藏熟食+中式糕点（提升度3.95）</li><li>“早餐套餐”：即食主食+冲饮食品+冷藏乳制品</li><li>“零食大礼包”：饼干+糖果巧克力+膨化食品</li></ul></div>' +
+        '<div class="box"><h4>交叉销售机会</h4><ul><li>购买醋的顾客→53%概率购买调味品和南北干货</li><li>购买米的顾客→61%概率购买滋补保健品</li><li>购买油和饼干的顾客→72%概率购买炒货食品</li></ul></div>' +
+        '<div class="box"><h4>会员营销建议</h4><ul><li>购买饮料的顾客推送熟食类优惠券</li><li>米面油购买者推荐滋补保健品</li><li>冷冻食品购买者推荐中式糕点</li><li>设置“组合购买积分翻倍”活动</li></ul></div>'
+      },
+      { title: '六、分析总结', content: '<p>本次购物篮分析基于747笔超市交易数据，涵盖195个商品类别。核心结论：</p>' +
+        '<div class="box"><ul>' +
+        '<li>饮料是超市最核心的流量入口，与几乎所有高频商品均存在强共现关系</li>' +
+        '<li>冷链食品与糕点类存在显著交叉销售机会</li>' +
+        '<li>调味品类商品具有强大的引流效应</li>' +
+        '<li>健康食品与主食存在强关联，米面油购买者是滋补保健品的理想目标客群</li>' +
+        '</ul></div>' }
+    ]
+  },
+  'rfm': {
+    title: '客户RFM价值细分报告',
+    subtitle: '基于RFM模型的客户分层与精准营销策略',
+    date: '2025年1月',
+    stats: [
+      { label: '分析客户数', value: '5,000 人' },
+      { label: '高价值客户', value: '600人(12%)' },
+      { label: '潜力客户', value: '1,400人(28%)' },
+      { label: '流失风险', value: '1,250人(25%)' }
+    ],
+    sections: [
+      { title: '一、RFM模型概述', content: '<p>RFM模型是客户价值分析的经典方法，通过三个维度综合评估客户：<strong>R（Recency）</strong>最近购买时间、<strong>F（Frequency）</strong>购买频率、<strong>M（Monetary）</strong>消费金额。每个维度按中位数分为高低两组，形成8个客户群体。</p>' },
+      { title: '二、客户分层结果', content: '<p>对5,000名客户进行RFM评分后，合并为四个主要层级：</p>' +
+        '<table><tr><th>客户层级</th><th>人数</th><th>占比</th><th>人均消费</th><th>营收贡献</th></tr>' +
+        '<tr><td>高价值客户</td><td>600</td><td>12%</td><td>4,312元</td><td><strong>52%</strong></td></tr>' +
+        '<tr><td>潜力客户</td><td>1,400</td><td>28%</td><td>1,524元</td><td>28%</td></tr>' +
+        '<tr><td>一般客户</td><td>1,750</td><td>35%</td><td>612元</td><td>16%</td></tr>' +
+        '<tr><td>流失风险</td><td>1,250</td><td>25%</td><td>185元</td><td>4%</td></tr></table>' },
+      { title: '三、关键发现与建议', content:
+        '<div class="box"><ul>' +
+        '<li>高价值客户占比12%但贡献52%营收，应提供VIP专属服务</li>' +
+        '<li>潜力客户中35%在收到定向优惠券后30天内完成复购</li>' +
+        '<li>R值（最近购买时间）是预测流失的最强单一指标</li>' +
+        '<li>流失风险客户中60%超过90天未购买，建议7天内启动召回</li>' +
+        '</ul></div>' }
+    ]
+  },
+  'logistics': {
+    title: '供应链物流成本分析报告',
+    subtitle: '运输方式成本对比与物流优化方案',
+    date: '2025年2月',
+    stats: [
+      { label: '公路成本', value: '0.35元/吨·km' },
+      { label: '铁路成本', value: '0.15元/吨·km' },
+      { label: '水运成本', value: '0.08元/吨·km' },
+      { label: '优化节省', value: '180万元/年' }
+    ],
+    sections: [
+      { title: '一、运输方式成本对比', content: '<p>对比四种运输方式的成本与时效：</p>' +
+        '<table><tr><th>运输方式</th><th>成本(元/吨·km)</th><th>时效(天)</th><th>适用场景</th></tr>' +
+        '<tr><td>公路</td><td>0.35</td><td>3</td><td>短途配送、灵活调度</td></tr>' +
+        '<tr><td>铁路</td><td>0.15</td><td>7</td><td>大宗长途、中距离</td></tr>' +
+        '<tr><td>水运</td><td>0.08</td><td>15</td><td>大宗低价值、长距离</td></tr>' +
+        '<tr><td>航空</td><td>1.80</td><td>1</td><td>紧急高价值、时效优先</td></tr></table>' },
+      { title: '二、优化成果', content:
+        '<div class="box"><ul>' +
+        '<li>公路运输占运量65%但成本占比72%，存在优化空间</li>' +
+        '<li>将部分中长途运输从公路切换至铁路，成本降低42%</li>' +
+        '<li>大宗低价值物资改用水运，吨公里成本仅0.08元</li>' +
+        '<li>优化后物流成本率从15.2%降至12.8%，年节省约180万元</li>' +
+        '</ul></div>' }
+    ]
+  },
+  'forecast': {
+    title: '销售预测分析报告',
+    subtitle: '基于时间序列的销售预测模型对比与选择',
+    date: '2025年3月',
+    stats: [
+      { label: '数据量', value: '24个月' },
+      { label: '月均销售额', value: '165万元' },
+      { label: '最优MAE', value: '12.3万元' },
+      { label: 'Q4峰值', value: '+40%' }
+    ],
+    sections: [
+      { title: '一、预测方法对比', content: '<p>使用三种方法对24个月销售数据进行预测建模：</p>' +
+        '<table><tr><th>预测方法</th><th>MAE(万元)</th><th>RMSE(万元)</th><th>评价</th></tr>' +
+        '<tr><td>3期移动平均</td><td>18.7</td><td>22.1</td><td>简单但滞后明显</td></tr>' +
+        '<tr><td>指数平滑(α=0.3)</td><td><strong>12.3</strong></td><td><strong>15.8</strong></td><td>最优模型★</td></tr>' +
+        '<tr><td>指数平滑(α=0.7)</td><td>14.6</td><td>17.2</td><td>较灵敏但噪声大</td></tr></table>' },
+      { title: '二、结论与建议', content:
+        '<div class="box"><ul>' +
+        '<li>指数平滑法(α=0.3)预测误差最小，选为生产预测模型</li>' +
+        '<li>Q4受双十一/双十二影响销售额环比增长40%，需单独建模</li>' +
+        '<li>下季度预测销售额区间：210-245万元（95%置信区间）</li>' +
+        '<li>建议按月度更新模型参数，持续监控预测偏差</li>' +
+        '</ul></div>' }
+    ]
+  }
+};
+
+var r = reports[reportId];
+if (!r) {
+  document.getElementById('reportContent').innerHTML = '<h1>报告未找到</h1><p>请从学生简介页面选择报告。</p><a href="profile.html">← 返回</a>';
+} else {
+  var h = '<h1>' + r.title + '</h1>' +
+    '<p class="subtitle">' + r.subtitle + '</p>' +
+    '<p style="color:var(--text-secondary);">分析日期：' + r.date + '</p>' +
+    '<div class="meta">';
+  r.stats.forEach(function(s) {
+    h += '<div class="meta-item"><div class="meta-value">' + s.value + '</div><div class="meta-label">' + s.label + '</div></div>';
+  });
+  h += '</div>';
+
+  r.sections.forEach(function(sec) {
+    h += '<h2>' + sec.title + '</h2>' + sec.content;
+  });
+
+  document.getElementById('reportContent').innerHTML = h;
+}
+</script>
+</body>
+</html>

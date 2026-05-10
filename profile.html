@@ -97,6 +97,7 @@
   if (reportGrid) {
     var reports = [
       {
+        reportId: 'market-basket',
         title: '超市购物篮关联规则分析报告',
         icon: '🛒',
         date: '2026年5月',
@@ -131,6 +132,7 @@
         course: 'supply-chain'
       },
       {
+        reportId: 'rfm',
         title: '客户RFM价值细分报告',
         icon: '👥',
         date: '2025年1月',
@@ -151,6 +153,7 @@
         course: 'data-analysis'
       },
       {
+        reportId: 'logistics',
         title: '供应链物流成本分析报告',
         icon: '🚛',
         date: '2025年2月',
@@ -171,6 +174,7 @@
         course: 'supply-chain'
       },
       {
+        reportId: 'forecast',
         title: '销售预测分析报告',
         icon: '📈',
         date: '2025年3月',
@@ -237,10 +241,11 @@
             r.findings.map(function(f) { return '<li style="font-size:12px;color:var(--text-secondary);">' + f + '</li>'; }).join('') +
           '</ul>' +
         '</div>' +
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">' +
           r.tags.map(function(t) { return '<span class="tag tag-blue">' + t + '</span>'; }).join('') +
           '<a href="learning.html?course=' + r.course + '" class="tag tag-green" style="text-decoration:none;">→ 相关课程</a>' +
         '</div>' +
+        '<a href="report-viewer.html?id=' + r.reportId + '" target="_blank" class="btn btn-outline btn-sm" style="margin-top:4px;">📥 查看完整报告 / 下载PDF</a>' +
       '</div>';
     });
     reportGrid.innerHTML = html;

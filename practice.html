@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="专项练习——Python在线代码编辑器、选择题、多选题、判断题、填空题，按课程和章节针对性练习，查看答案解析。">
 <title>专项练习 - 学生学习系统</title>
 <link rel="stylesheet" href="style.css">
 </head>
@@ -40,7 +41,7 @@
 
 <button id="mobileSidebarBtn">&#x2630; 目录</button>
 
-<script src="common.js"></script>
+<script src="common.js" defer></script>
 <script>
 var practiceCourse = getUrlParam('tab') || 'python';
 var practiceChapter = getUrlParam('chapter') !== null ? parseInt(getUrlParam('chapter')) : null;

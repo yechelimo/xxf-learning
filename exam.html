@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="在线考试系统——分课程分章节组卷、限时作答（10-60分钟）、自动批改计分、错题汇总与知识点解析、历史成绩记录。">
 <title>在线考试 - 学生学习系统</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="style.css">
 <style>
 .chapter-select-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin: 12px 0; }
@@ -70,7 +69,7 @@ function renderExam() {
 }
 
 function renderExamSetup(container) {
-  var html = '<div class="card"><h2><i class="fa-solid fa-pen-to-square"></i> 分章节在线考试</h2>' +
+  var html = '<div class="card"><h2>📝 分章节在线考试</h2>' +
     '<p>选择考试范围：指定课程和章节，系统从所选章节中随机抽取题目生成试卷。</p>';
 
   // 课程选择
@@ -324,9 +323,9 @@ function showExamResult(container) {
   });
   var score = examQuestions.length > 0 ? Math.round(correct / examQuestions.length * 100) : 0;
   var html = '<div class="card score-card"><h2>考试完成！</h2><div class="score">' + score + '</div><p style="font-size:18px;">正确 ' + correct + ' / ' + examQuestions.length + ' 题</p>';
-  if (score >= 80) html += '<p style="color:var(--success);"><i class="fa-solid fa-trophy"></i> 优秀！你对知识点掌握得很好！</p>';
-  else if (score >= 60) html += '<p style="color:var(--warning);"><i class="fa-solid fa-book"></i> 不错，继续加油！</p>';
-  else html += '<p style="color:var(--danger);"><i class="fa-solid fa-book-open-reader"></i> 需要加强学习，建议回顾各章节。</p>';
+  if (score >= 80) html += '<p style="color:var(--success);">🎉 优秀！你对知识点掌握得很好！</p>';
+  else if (score >= 60) html += '<p style="color:var(--warning);">📖 不错，继续加油！</p>';
+  else html += '<p style="color:var(--danger);">📚 需要加强学习，建议回顾各章节。</p>';
   html += '</div>';
 
   if (wrongQuestions.length > 0) {

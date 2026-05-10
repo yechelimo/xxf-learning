@@ -97,55 +97,97 @@
   if (reportGrid) {
     var reports = [
       {
-        title: '购物篮关联分析报告',
+        title: '超市购物篮关联规则分析报告',
         icon: '🛒',
-        date: '2024年12月',
-        summary: '基于某连锁超市3个月交易数据，运用Apriori算法挖掘商品间关联规则，发现"牛奶→面包"组合的支持度达45%，置信度78%，提升度2.1，具有强关联性。',
-        findings: [
-          '识别出12组高价值商品关联组合',
-          '牛奶+面包+黄油是最高频三件套',
-          '建议将关联商品捆绑促销，预期销售额提升15%'
+        date: '2026年5月',
+        summary: '基于超市747笔真实交易数据，涵盖195个商品类别，采用Apriori算法挖掘出3,557个频繁项集和10,548条关联规则。筛选出129条强关联规则（提升度>3，置信度>50%），为货架布局、捆绑促销和库存管理提供数据支撑。',
+        stats: [
+          { label: '交易总数', value: '747 笔' },
+          { label: '商品类别', value: '195 个' },
+          { label: '频繁项集', value: '3,557 个' },
+          { label: '关联规则', value: '10,548 条' },
+          { label: '强关联规则', value: '129 条' }
         ],
-        tags: ['供应链数据分析', '关联规则', 'Apriori'],
+        findings: [
+          '饮料购买率76.84%，是超市绝对流量入口，与几乎所有高频商品强共现',
+          '饮料+常温熟食共现率45.11%，是最强商品组合',
+          '菜肴半成品+冷藏素食→杂粮：提升度4.01，置信度68.18%，为最强关联规则',
+          '油+饼干→炒货食品：置信度72.41%，提升度3.58，交叉销售机会显著'
+        ],
+        topProducts: [
+          { rank: 1, name: '饮料', freq: '76.84%' },
+          { rank: 2, name: '散装休闲食品', freq: '50.20%' },
+          { rank: 3, name: '香烟', freq: '49.00%' },
+          { rank: 4, name: '常温熟食类', freq: '48.86%' },
+          { rank: 5, name: '进口食品', freq: '44.04%' }
+        ],
+        topRules: [
+          '菜肴半成品+冷藏素食 → 杂粮 (提升度4.01)',
+          '啤酒+冷藏熟食 → 中式糕点 (提升度3.95)',
+          '油+饼干 → 炒货食品 (置信度72.41%)',
+          '米+冲饮食品 → 滋补保健品 (提升度3.77)'
+        ],
+        tags: ['供应链数据分析', 'Apriori算法', '关联规则', '购物篮分析'],
         course: 'supply-chain'
       },
       {
         title: '客户RFM价值细分报告',
         icon: '👥',
         date: '2025年1月',
-        summary: '对电商平台5000名客户进行RFM建模分析，将客户分为高价值(12%)、潜力(28%)、一般(35%)和流失风险(25%)四类群体。',
-        findings: [
-          '高价值客户贡献了总营收的52%',
-          '流失风险客户中60%超过90天未购买',
-          '针对潜力客户定向发放优惠券，召回率可达35%'
+        summary: '对电商平台5,000名客户进行RFM建模分析，按最近购买时间(R)、购买频率(F)、消费金额(M)三个维度综合打分，将客户分为高价值(12%)、潜力(28%)、一般(35%)和流失风险(25%)四类群体，制定差异化运营策略。',
+        stats: [
+          { label: '分析客户数', value: '5,000 人' },
+          { label: '高价值客户', value: '600人(12%)' },
+          { label: '潜力客户', value: '1,400人(28%)' },
+          { label: '流失风险', value: '1,250人(25%)' }
         ],
-        tags: ['数据分析技术', 'RFM模型', '客户细分'],
+        findings: [
+          '高价值客户贡献了总营收的52%，人均消费是普通客户的4.3倍',
+          '流失风险客户中60%超过90天未购买，需紧急召回',
+          '潜力客户中35%在收到定向优惠券后30天内完成复购',
+          'R值（最近购买时间）是预测流失的最强单一指标'
+        ],
+        tags: ['数据分析技术', 'RFM模型', '客户细分', '精准营销'],
         course: 'data-analysis'
       },
       {
         title: '供应链物流成本分析报告',
         icon: '🚛',
         date: '2025年2月',
-        summary: '分析某制造企业全年物流数据，对比公路、铁路、水运、航空四种运输方式的成本与时效，找出最优运输组合方案。',
-        findings: [
-          '公路运输占总运量65%但成本占比72%',
-          '水运成本最低(0.08元/吨公里)但时效最慢',
-          '优化后物流成本率从15.2%降至12.8%'
+        summary: '分析某制造企业全年物流数据，对比公路、铁路、水运、航空四种运输方式的成本结构与时效表现。公路运输占总运量65%但成本占比72%，通过优化运输组合方案，物流成本率从15.2%降至12.8%，年节省物流费用约180万元。',
+        stats: [
+          { label: '公路成本', value: '0.35元/吨公里' },
+          { label: '铁路成本', value: '0.15元/吨公里' },
+          { label: '水运成本', value: '0.08元/吨公里' },
+          { label: '航空成本', value: '1.80元/吨公里' }
         ],
-        tags: ['供应链数据分析', '物流成本', '运输优化'],
+        findings: [
+          '公路运输占运量65%但成本占比72%，存在优化空间',
+          '水运成本最低(0.08元/吨公里)但时效最慢(15天)，适合大宗低价值物资',
+          '铁路在中长途运输中性价比最优（成本低、时效适中）',
+          '优化后物流成本率降至12.8%，年节省约180万元'
+        ],
+        tags: ['供应链数据分析', '物流成本', '运输优化', '成本控制'],
         course: 'supply-chain'
       },
       {
         title: '销售预测分析报告',
         icon: '📈',
         date: '2025年3月',
-        summary: '基于某零售商24个月历史销售数据，分别使用移动平均、指数平滑和线性回归三种方法进行预测，对比预测精度。',
-        findings: [
-          '指数平滑法(α=0.3)预测误差最小(MAE=12.3)',
-          'Q4受双十一影响销售额环比增长40%',
-          '下季度预测销售额区间：210-245万元'
+        summary: '基于某零售商24个月历史销售数据（月均销售额165万元），分别使用3期移动平均、指数平滑(α=0.3/0.7)和线性回归三种方法进行预测建模，以MAE和RMSE为评估指标对比预测精度，最终选择指数平滑法(α=0.3)作为生产预测模型。',
+        stats: [
+          { label: '数据量', value: '24个月' },
+          { label: '月均销售额', value: '165万元' },
+          { label: '最优模型MAE', value: '12.3万元' },
+          { label: 'Q4峰值增幅', value: '+40%' }
         ],
-        tags: ['数据分析技术', '时间序列', '预测模型'],
+        findings: [
+          '指数平滑法(α=0.3)预测误差最小(MAE=12.3)，优于移动平均(MAE=18.7)',
+          'Q4受双十一/双十二影响销售额环比增长40%，需单独建模',
+          '下季度预测销售额区间：210-245万元（95%置信区间）',
+          '建议按月度更新模型参数，持续监控预测偏差'
+        ],
+        tags: ['数据分析技术', '时间序列', '预测模型', '指数平滑'],
         course: 'data-analysis'
       }
     ];
@@ -160,8 +202,37 @@
             '<span style="font-size:12px;color:var(--text-secondary);">' + r.date + '</span>' +
           '</div>' +
         '</div>' +
-        '<p style="font-size:13px;color:var(--text-secondary);margin:10px 0;">' + r.summary + '</p>' +
-        '<div style="margin:8px 0;"><strong style="font-size:13px;">关键发现：</strong>' +
+        '<p style="font-size:13px;color:var(--text-secondary);margin:10px 0;">' + r.summary + '</p>';
+
+      // 数据统计小表格
+      if (r.stats) {
+        html += '<div class="report-stats">';
+        r.stats.forEach(function(s) {
+          html += '<div class="report-stat-item"><span class="stat-value">' + s.value + '</span><span class="stat-label">' + s.label + '</span></div>';
+        });
+        html += '</div>';
+      }
+
+      // 商品排名表格（仅购物篮报告）
+      if (r.topProducts) {
+        html += '<div style="margin:8px 0;"><strong style="font-size:12px;">📊 购买频率 Top 5：</strong>';
+        html += '<table class="mini-table"><tr><th>#</th><th>商品类别</th><th>购买频率</th></tr>';
+        r.topProducts.forEach(function(p) {
+          html += '<tr><td>' + p.rank + '</td><td>' + p.name + '</td><td style="font-weight:600;">' + p.freq + '</td></tr>';
+        });
+        html += '</table></div>';
+      }
+
+      // 强关联规则（仅购物篮报告）
+      if (r.topRules) {
+        html += '<div style="margin:8px 0;"><strong style="font-size:12px;">🔗 最强关联规则：</strong><ul style="padding-left:16px;margin:4px 0;">';
+        r.topRules.forEach(function(rule) {
+          html += '<li style="font-size:11px;color:var(--text-secondary);">' + rule + '</li>';
+        });
+        html += '</ul></div>';
+      }
+
+      html += '<div style="margin:8px 0;"><strong style="font-size:13px;">关键发现：</strong>' +
           '<ul style="padding-left:18px;margin:4px 0;">' +
             r.findings.map(function(f) { return '<li style="font-size:12px;color:var(--text-secondary);">' + f + '</li>'; }).join('') +
           '</ul>' +

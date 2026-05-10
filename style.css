@@ -332,6 +332,21 @@ a:hover { color: var(--primary-dark); }
   justify-content: center; font-size: 24px; flex-shrink: 0;
 }
 .report-card h4 { font-size: 15px; margin: 0; color: var(--text); }
+.report-stats {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 8px; margin: 10px 0; padding: 10px;
+  background: var(--bg); border-radius: 6px;
+}
+.report-stat-item { text-align: center; }
+.stat-value { display: block; font-size: 16px; font-weight: 700; color: var(--primary); }
+.stat-label { display: block; font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+.mini-table {
+  width: 100%; font-size: 11px; border-collapse: collapse; margin: 6px 0;
+}
+.mini-table th, .mini-table td {
+  padding: 4px 8px; text-align: left; border-bottom: 1px solid var(--border);
+}
+.mini-table th { background: #f8fafc; font-weight: 600; color: var(--text-secondary); }
 
 /* ==================== 返回顶部按钮 ==================== */
 #backToTop {

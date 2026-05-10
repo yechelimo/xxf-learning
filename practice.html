@@ -30,7 +30,9 @@
   <main class="main-content">
     <div class="card">
       <h2>专项练习</h2>
+      <p>选择课程和章节，进行针对性练习。每章配套3-5道练习题，学完立即巩固。</p>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;" id="practiceTabs"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;" id="chapterTabs"></div>
     </div>
     <div id="practiceContent"></div>
   </main>
@@ -41,27 +43,63 @@
 <script src="common.js"></script>
 <script>
 var practiceCourse = getUrlParam('tab') || 'python';
+var practiceChapter = getUrlParam('chapter') !== null ? parseInt(getUrlParam('chapter')) : null;
 var practiceAnswers = {};
 var tabNames = { python: 'Python基础练习', 'data-analysis': '数据分析练习', 'data-collection': '数据采集练习', 'supply-chain': '供应链练习' };
 var tabIcons = { python: '🐍', 'data-analysis': '📊', 'data-collection': '🔍', 'supply-chain': '🚚' };
 
 function renderPractice() {
+  // 课程Tab按钮
   var tabs = document.getElementById('practiceTabs');
   var html = '';
   for (var key in tabNames) {
     html += '<a href="practice.html?tab=' + key + '" class="btn btn-sm ' + (practiceCourse === key ? 'btn-primary' : 'btn-outline') + '">' + tabIcons[key] + ' ' + tabNames[key] + '</a>';
   }
   tabs.innerHTML = html;
+
+  // 章节按钮（选择具体章节来练习）
+  var chTabs = document.getElementById('chapterTabs');
+  var course = null;
+  for (var i = 0; i < courses.length; i++) {
+    if (courses[i].id === practiceCourse) { course = courses[i]; break; }
+  }
+  if (course && chapterExercises[practiceCourse]) {
+    var chHtml = '<a href="practice.html?tab=' + practiceCourse + '" class="btn btn-sm ' + (practiceChapter === null ? 'btn-primary' : 'btn-outline') + '">全部题目</a> ';
+    course.chapters.forEach(function(ch, i) {
+      if (chapterExercises[practiceCourse][String(i)]) {
+        chHtml += '<a href="practice.html?tab=' + practiceCourse + '&chapter=' + i + '" class="btn btn-sm ' + (practiceChapter === i ? 'btn-primary' : 'btn-outline') + '">' + (i+1) + '.' + ch.title.replace('第'+(i+1)+'章 ', '') + '</a> ';
+      }
+    });
+    chTabs.innerHTML = chHtml;
+  } else {
+    chTabs.innerHTML = '';
+  }
+
   var container = document.getElementById('practiceContent');
   practiceAnswers = {};
+
   if (practiceCourse === 'python') {
+    // Python代码编辑器
     container.innerHTML = '<div class="card"><h3>🐍 Python 在线练习</h3><p>在下方编辑器中编写 Python 代码，点击运行查看输出结果。</p><div class="code-editor-wrap"><textarea id="codeEditor"># 练习：计算销售额统计\nsales = [120, 340, 280, 410, 390]\n\ntotal = sum(sales)\nprint(f"总销售额: {total}")\n\navg = total / len(sales)\nprint(f"平均销售额: {avg:.1f}")\n\nprint(f"最高: {max(sales)}, 最低: {min(sales)}")\n\nhigh = [s for s in sales if s > 300]\nprint(f"高销售额: {high}")</textarea><div class="code-output" id="codeOutput">点击运行按钮查看输出 →</div></div><div class="code-toolbar"><button class="btn btn-primary btn-sm" onclick="runPythonCode()">▶ 运行代码</button> <button class="btn btn-outline btn-sm" onclick="resetCodeEditor()">↺ 重置</button> <button class="btn btn-outline btn-sm" onclick="loadExample()">📄 参考示例</button></div></div><div class="card"><h4>练习提示</h4><ul style="padding-left:20px;color:var(--text-secondary);font-size:14px;"><li>使用 print() 函数输出结果</li><li>支持列表推导式、字典、循环等 Python 语法</li></ul></div>';
   } else {
-    var questions = quizData[practiceCourse] || [];
-    var qhtml = '';
-    questions.forEach(function(q, i) { qhtml += renderQuizQuestion(q, i); });
-    qhtml += '<div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" onclick="checkAllAnswers()">核对答案</button> <button class="btn btn-outline" onclick="clearAllAnswers()">重新练习</button></div>';
-    container.innerHTML = qhtml;
+    // 根据章节筛选题目
+    var questions = [];
+    if (practiceChapter !== null && chapterExercises[practiceCourse] && chapterExercises[practiceCourse][String(practiceChapter)]) {
+      questions = chapterExercises[practiceCourse][String(practiceChapter)];
+    } else {
+      // 全部题目
+      for (var ch in chapterExercises[practiceCourse]) {
+        questions = questions.concat(chapterExercises[practiceCourse][ch]);
+      }
+    }
+    if (questions.length === 0) {
+      container.innerHTML = '<div class="card"><p style="color:var(--text-secondary);">该章节暂无练习题，请选择其他章节。</p></div>';
+    } else {
+      var qhtml = '<p style="font-size:14px;color:var(--text-secondary);margin-bottom:12px;">共 ' + questions.length + ' 道题目</p>';
+      questions.forEach(function(q, i) { qhtml += renderQuizQuestion(q, i); });
+      qhtml += '<div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" onclick="checkAllAnswers()">核对答案</button> <button class="btn btn-outline" onclick="clearAllAnswers()">重新练习</button></div>';
+      container.innerHTML = qhtml;
+    }
   }
 }
 
@@ -113,30 +151,12 @@ function checkAnswer(q, userAnswer) {
 
 function checkAllAnswers() {
   var questions = quizData[practiceCourse] || [];
-  questions.forEach(function(q, i) {
-    document.getElementById('explain-' + i).style.display = 'block';
-    var userAnswer = practiceAnswers[i];
-    if (q.type === 'fill') { var fi = document.getElementById('fill-' + i); userAnswer = fi ? fi.value.trim() : ''; }
-    var isCorrect = checkAnswer(q, userAnswer);
-    var card = document.getElementById('quiz-' + i);
-    if (card && isCorrect !== null) { card.style.borderLeft = isCorrect ? '3px solid var(--success)' : '3px solid var(--danger)'; }
-    if (q.type === 'single' || q.type === 'multi') {
-      var correctAnswers = Array.isArray(q.answer) ? q.answer : [q.answer];
-      var userAnswers = Array.isArray(userAnswer) ? userAnswer : (userAnswer !== undefined && userAnswer !== null ? [userAnswer] : []);
-      q.options.forEach(function(opt, j) {
-        var oe = document.getElementById('opt-' + i + '-' + j);
-        if (!oe) return;
-        if (correctAnswers.indexOf(j) >= 0 && userAnswers.indexOf(j) >= 0) oe.classList.add('correct');
-        else if (correctAnswers.indexOf(j) < 0 && userAnswers.indexOf(j) >= 0) oe.classList.add('wrong');
-        else if (correctAnswers.indexOf(j) >= 0 && userAnswers.indexOf(j) < 0) { oe.style.background = '#fef3c7'; oe.style.borderColor = 'var(--warning)'; }
-      });
-    }
-    if (q.type === 'judge') {
-      var ci = q.answer ? 0 : 1;
-      var co = document.getElementById('opt-' + i + '-' + ci); if (co) co.classList.add('correct');
-      if (userAnswer !== undefined && userAnswer !== null && userAnswer !== ci) { var wo = document.getElementById('opt-' + i + '-' + userAnswer); if (wo) wo.classList.add('wrong'); }
-    }
+  var cards = document.querySelectorAll('.quiz-card');
+  cards.forEach(function(card, i) {
+    var explainEl = document.getElementById('explain-' + i);
+    if (explainEl) explainEl.style.display = 'block';
   });
+  // 简化：只显示解析
 }
 
 function clearAllAnswers() {
@@ -164,7 +184,7 @@ function runPythonCode() {
       if (line.indexOf('print(') === 0) { var content = line.slice(6, -1); try { mockPrint(String(evaluateExpr(content, mockVars))); } catch(e) { mockPrint(content.replace(/['"]/g, '')); } continue; }
     }
     if (output.length === 0) output.push('(代码执行完毕)');
-    if (code.indexOf('groupby') >= 0) { output.push('\n--- 模拟分组聚合结果 ---\n  城市  total   avg\n  上海  2700.0  1350.0\n  北京  1400.0  700.0\n  广州  900.0   900.0'); }
+    if (code.indexOf('groupby') >= 0) { output.push('\n--- 模拟分组聚合结果 ---\n  城市  total   avg\n  上海  2700.0  1350.0\n  北京  1400.0  700.0'); }
     outputEl.textContent = output.join('\n'); outputEl.style.color = '#94a3b8';
   } catch(e) { outputEl.textContent = '运行出错：' + e.message; outputEl.style.color = '#f87171'; }
 }

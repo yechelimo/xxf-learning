@@ -5,7 +5,7 @@
 var courses = [
   {
     "id": "python",
-    "icon": "🐍",
+    "icon": "<i class=\"fa-brands fa-python\"></i>",
     "title": "Python编程基础",
     "desc": "系统学习 Python 语法、数据结构、控制流、函数、文件操作、面向对象编程等核心知识，从零打好编程基础。",
     "chapters": [
@@ -387,7 +387,7 @@ var courses = [
   },
   {
     "id": "data-analysis",
-    "icon": "📊",
+    "icon": "<i class=\"fa-solid fa-chart-bar\"></i>",
     "title": "数据分析技术",
     "desc": "掌握 NumPy 科学计算、Pandas 数据处理、数据清洗、分组聚合、数据可视化、统计分析、特征工程、聚类分析、时间序列等核心技术。",
     "chapters": [
@@ -617,7 +617,7 @@ var courses = [
   },
   {
     "id": "data-collection",
-    "icon": "🔍",
+    "icon": "<i class=\"fa-solid fa-magnifying-glass-data\"></i>",
     "title": "数据采集与处理",
     "desc": "学习数据源识别、多种数据格式读取（CSV/Excel/JSON/SQL）、数据加工转换、数据合并连接、数据质量评估、Web数据采集、数据导出等全流程技能。",
     "chapters": [
@@ -727,7 +727,7 @@ var courses = [
   },
   {
     "id": "supply-chain",
-    "icon": "🚚",
+    "icon": "<i class=\"fa-solid fa-truck-fast\"></i>",
     "title": "供应链数据分析",
     "desc": "结合供应链业务场景，深入学习指标体系、库存分析、物流成本、关联分析、客户细分、销售预测、供应商评估等实用分析技能。",
     "chapters": [

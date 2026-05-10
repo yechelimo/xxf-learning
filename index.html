@@ -43,7 +43,7 @@ a:hover { color: var(--primary-dark); }
 
 /* ==================== 顶部导航栏 ==================== */
 .navbar {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 110;
   height: var(--navbar-height);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -78,7 +78,7 @@ a:hover { color: var(--primary-dark); }
   width: var(--sidebar-width); min-width: var(--sidebar-width);
   background: var(--surface); border-right: 1px solid var(--border);
   position: fixed; top: var(--navbar-height); bottom: 0; left: 0;
-  overflow-y: auto; padding: 16px 0;
+  overflow-y: auto; padding: 16px 0; z-index: 90;
   transition: transform var(--transition);
 }
 .sidebar-title {
@@ -671,6 +671,30 @@ const courses = [
           '时效性：数据是否在有效时间范围内',
           '有效性：数据是否符合预定义格式和规则'
         ]}
+      ]},
+      { title: '第5章 数据导出与报告', content: [
+        { type: 'text', text: '数据处理完成后，需要将结果导出为可用格式或生成分析报告，供业务决策使用。' },
+        { type: 'list', title: '数据导出方式', items: [
+          '导出为 CSV：df.to_csv("output.csv", index=False, encoding="utf-8-sig")',
+          '导出为 Excel：df.to_excel("output.xlsx", sheet_name="结果", index=False)',
+          '导出为 JSON：df.to_json("output.json", orient="records", force_ascii=False)',
+          '导出到数据库：df.to_sql("table_name", connection, if_exists="replace")',
+          '批量导出：多Sheet Excel、按条件分组导出',
+          '导出可视化报告：结合 Matplotlib 导出图表 + 数据摘要'
+        ]},
+        { type: 'code', code: 'import pandas as pd\n\ndf = pd.DataFrame({"城市": ["上海","北京","广州"], "销售额": [1200, 800, 900]})\n\n# 导出为 CSV（推荐 utf-8-sig 编码，Excel可直接打开）\ndf.to_csv("sales_report.csv", index=False, encoding="utf-8-sig")\nprint("已导出 sales_report.csv")\n\n# 导出为 Excel 多Sheet\nwith pd.ExcelWriter("report.xlsx") as writer:\n    df.to_excel(writer, sheet_name="销售汇总", index=False)\n    df.describe().to_excel(writer, sheet_name="统计描述")\nprint("已导出 report.xlsx")', lang: 'python' }
+      ]},
+      { title: '第6章 数据采集与处理综合实战', content: [
+        { type: 'text', text: '综合运用数据采集、清洗、加工、合并、质量评估和导出的全流程技能，完成一个完整的数据处理项目。' },
+        { type: 'list', title: '综合实战流程', items: [
+          'Step 1：读取多个数据源（CSV + Excel）',
+          'Step 2：检查并处理各数据源的缺失值和异常值',
+          'Step 3：数据格式统一和类型转换',
+          'Step 4：多表关联合并（Merge/Join）',
+          'Step 5：数据质量最终核查',
+          'Step 6：导出处理后的数据集和分析摘要'
+        ]},
+        { type: 'code', code: 'import pandas as pd\nimport numpy as np\n\n# 综合实战：处理销售数据全流程\n# Step 1-2：读取并清洗订单数据\norders = pd.read_csv("orders.csv")\norders["金额"] = orders["金额"].fillna(orders["金额"].median())\norders = orders.drop_duplicates()\n\n# Step 3-4：关联客户信息\ncustomers = pd.read_excel("customers.xlsx")\ndf = orders.merge(customers, on="客户ID", how="left")\n\n# Step 5：质量检查\nprint(f"总行数: {len(df)}, 缺失值: {df.isnull().sum().sum()}")\nprint(f"重复行: {df.duplicated().sum()}")\n\n# Step 6：导出结果\ndf.to_csv("final_report.csv", index=False, encoding="utf-8-sig")\nprint("数据处理完成！已导出 final_report.csv")', lang: 'python' }
       ]}
     ]
   },
@@ -813,10 +837,17 @@ const state = {
 
 // ==================== 页面导航 ====================
 function navigateTo(page) {
+  // 考试中离开页面时警告
+  if (state.examStarted && !state.examSubmitted && page !== 'exam') {
+    if (!confirm('正在考试中，离开将丢失当前考试进度。确定离开吗？')) return;
+    if (state.examTimer) clearInterval(state.examTimer);
+    state.examStarted = false;
+    state.examAnswers = {};
+  }
   state.currentPage = page;
   // 更新导航高亮
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
-  const navLink = document.querySelector(`[data-page="${page}"]`);
+  const navLink = document.querySelector('[data-page="' + page + '"]');
   if (navLink) navLink.classList.add('active');
   // 显示页面
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
@@ -824,6 +855,8 @@ function navigateTo(page) {
   if (pageEl) pageEl.classList.add('active');
   // 渲染页面
   renderPage(page);
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   // 关闭移动端菜单
   document.getElementById('navLinks').classList.remove('open');
   document.getElementById('sidebar').classList.remove('mobile-open');
@@ -845,7 +878,7 @@ function renderPage(page) {
 function renderHome() {
   const grid = document.getElementById('homeCourseGrid');
   grid.innerHTML = courses.map(c => `
-    <div class="course-card" onclick="navigateToPage('learning');selectCourse('${c.id}')">
+    <div class="course-card" onclick="selectCourseAndNavigate('${c.id}')">
       <div class="icon">${c.icon}</div>
       <h4>${c.title}</h4>
       <p>${c.desc}</p>
@@ -858,9 +891,9 @@ function renderHome() {
   updateOverallProgress();
 }
 
-function navigateToPage(page) { navigateTo(page); }
-function selectCourse(courseId) {
+function selectCourseAndNavigate(courseId) {
   state.currentCourse = courseId;
+  navigateTo('learning');
   renderLearning();
 }
 
@@ -1014,7 +1047,7 @@ function renderPractice() {
   const tabNames = { python: 'Python基础练习', 'data-analysis': '数据分析练习', 'data-collection': '数据采集练习', 'supply-chain': '供应链练习' };
   const tabIcons = { python: '🐍', 'data-analysis': '📊', 'data-collection': '🔍', 'supply-chain': '🚚' };
   tabs.innerHTML = Object.entries(tabNames).map(([key, name]) =>
-    `<button class="btn ${state.practiceCourse === key ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="state.practiceCourse='${key}';renderPractice();">${tabIcons[key]} ${name}</button>`
+    `<button class="btn ${state.practiceCourse === key ? 'btn-primary' : 'btn-outline'} btn-sm" onclick="practiceAnswers={};state.practiceCourse='${key}';renderPractice();">${tabIcons[key]} ${name}</button>`
   ).join('');
 
   const container = document.getElementById('practiceContent');
@@ -1070,7 +1103,7 @@ print(f"高销售额: {high}")</textarea>
     });
     html += `<div style="text-align:center;margin-top:16px;">
       <button class="btn btn-primary" onclick="checkAllAnswers('${courseId}')">核对答案</button>
-      <button class="btn btn-outline" onclick="state.practiceCourse='${courseId}';renderPractice();">重新练习</button>
+      <button class="btn btn-outline" onclick="practiceAnswers={};state.practiceCourse='${courseId}';renderPractice();">重新练习</button>
     </div>`;
     container.innerHTML = html;
   }
@@ -1145,10 +1178,37 @@ function checkAllAnswers(courseId) {
       userAnswer = document.getElementById('fill-' + i)?.value.trim();
     }
     const isCorrect = checkAnswer(q, userAnswer);
-    // 标记正确/错误
+    // 标记正确/错误 - 卡片边框
     const card = document.getElementById('quiz-' + i);
     if (card && isCorrect !== null) {
       card.style.borderLeft = isCorrect ? '3px solid var(--success)' : '3px solid var(--danger)';
+    }
+    // 标记每个选项的对错（单选和多选）
+    if (q.type === 'single' || q.type === 'multi') {
+      q.options.forEach((opt, j) => {
+        var optEl = document.getElementById('opt-' + i + '-' + j);
+        if (!optEl) return;
+        var correctAnswers = Array.isArray(q.answer) ? q.answer : [q.answer];
+        var userAnswers = Array.isArray(userAnswer) ? userAnswer : (userAnswer !== undefined && userAnswer !== null ? [userAnswer] : []);
+        if (correctAnswers.includes(j) && userAnswers.includes(j)) {
+          optEl.classList.add('correct');
+        } else if (!correctAnswers.includes(j) && userAnswers.includes(j)) {
+          optEl.classList.add('wrong');
+        } else if (correctAnswers.includes(j) && !userAnswers.includes(j)) {
+          optEl.style.background = '#fef3c7';
+          optEl.style.borderColor = 'var(--warning)';
+        }
+      });
+    }
+    // 标记判断选项
+    if (q.type === 'judge') {
+      var correctIdx = q.answer ? 0 : 1;
+      var correctOpt = document.getElementById('opt-' + i + '-' + correctIdx);
+      if (correctOpt) correctOpt.classList.add('correct');
+      if (userAnswer !== undefined && userAnswer !== null && userAnswer !== correctIdx) {
+        var wrongOpt = document.getElementById('opt-' + i + '-' + userAnswer);
+        if (wrongOpt) wrongOpt.classList.add('wrong');
+      }
     }
   });
 }
@@ -1161,7 +1221,7 @@ function checkAnswer(q, userAnswer) {
     return correct === user;
   }
   if (q.type === 'fill') {
-    return userAnswer === q.answer;
+    return userAnswer.replace(/\s+/g, '') === q.answer.replace(/\s+/g, '');
   }
   if (q.type === 'judge') {
     return (userAnswer === 0 && q.answer === true) || (userAnswer === 1 && q.answer === false);
@@ -1675,30 +1735,34 @@ function clearNotes() {
   }
 }
 
-// ==================== 移动端菜单 ====================
-document.getElementById('menuToggle').addEventListener('click', () => {
-  document.getElementById('navLinks').classList.toggle('open');
-});
-
-document.getElementById('sidebarOverlay').addEventListener('click', () => {
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('sidebarOverlay').classList.remove('show');
-});
-
 // 在移动端打开侧边栏
 function toggleMobileSidebar() {
   document.getElementById('sidebar').classList.toggle('mobile-open');
   document.getElementById('sidebarOverlay').classList.toggle('show');
 }
 
-// ==================== 导航事件绑定 ====================
-document.querySelectorAll('.nav-links a').forEach(link => {
-  link.addEventListener('click', (e) => {
-    e.preventDefault();
-    const page = link.dataset.page;
-    navigateTo(page);
+// ==================== 事件绑定（在 DOMContentLoaded 中统一调用） ====================
+function bindEvents() {
+  // 移动端菜单切换
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    document.getElementById('navLinks').classList.toggle('open');
   });
-});
+
+  // 遮罩层关闭侧边栏
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    document.getElementById('sidebar').classList.remove('mobile-open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+  });
+
+  // 导航链接绑定
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = link.dataset.page;
+      navigateTo(page);
+    });
+  });
+}
 
 // ==================== 侧边栏移动端浮动按钮 ====================
 const sidebarToggleBtn = document.createElement('button');
@@ -1722,6 +1786,7 @@ checkMobile();
 
 // ==================== 初始化 ====================
 function init() {
+  bindEvents();
   renderSidebar();
   renderHome();
   updateOverallProgress();

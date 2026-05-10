@@ -61,6 +61,11 @@
       <h3>学习进度总览</h3>
       <div id="profileProgress"></div>
     </div>
+    <div class="card">
+      <h3>📋 专业分析报告</h3>
+      <p>以下是基于课程所学知识完成的数据分析实战报告。</p>
+      <div class="report-grid" id="reportGrid"></div>
+    </div>
   </main>
 </div>
 
@@ -86,6 +91,90 @@
       '<div class="progress-bar"><div class="fill" style="width:' + pct + '%;"></div></div>';
   });
   container.innerHTML = html;
+
+  // 渲染专业报告
+  var reportGrid = document.getElementById('reportGrid');
+  if (reportGrid) {
+    var reports = [
+      {
+        title: '购物篮关联分析报告',
+        icon: '🛒',
+        date: '2024年12月',
+        summary: '基于某连锁超市3个月交易数据，运用Apriori算法挖掘商品间关联规则，发现"牛奶→面包"组合的支持度达45%，置信度78%，提升度2.1，具有强关联性。',
+        findings: [
+          '识别出12组高价值商品关联组合',
+          '牛奶+面包+黄油是最高频三件套',
+          '建议将关联商品捆绑促销，预期销售额提升15%'
+        ],
+        tags: ['供应链数据分析', '关联规则', 'Apriori'],
+        course: 'supply-chain'
+      },
+      {
+        title: '客户RFM价值细分报告',
+        icon: '👥',
+        date: '2025年1月',
+        summary: '对电商平台5000名客户进行RFM建模分析，将客户分为高价值(12%)、潜力(28%)、一般(35%)和流失风险(25%)四类群体。',
+        findings: [
+          '高价值客户贡献了总营收的52%',
+          '流失风险客户中60%超过90天未购买',
+          '针对潜力客户定向发放优惠券，召回率可达35%'
+        ],
+        tags: ['数据分析技术', 'RFM模型', '客户细分'],
+        course: 'data-analysis'
+      },
+      {
+        title: '供应链物流成本分析报告',
+        icon: '🚛',
+        date: '2025年2月',
+        summary: '分析某制造企业全年物流数据，对比公路、铁路、水运、航空四种运输方式的成本与时效，找出最优运输组合方案。',
+        findings: [
+          '公路运输占总运量65%但成本占比72%',
+          '水运成本最低(0.08元/吨公里)但时效最慢',
+          '优化后物流成本率从15.2%降至12.8%'
+        ],
+        tags: ['供应链数据分析', '物流成本', '运输优化'],
+        course: 'supply-chain'
+      },
+      {
+        title: '销售预测分析报告',
+        icon: '📈',
+        date: '2025年3月',
+        summary: '基于某零售商24个月历史销售数据，分别使用移动平均、指数平滑和线性回归三种方法进行预测，对比预测精度。',
+        findings: [
+          '指数平滑法(α=0.3)预测误差最小(MAE=12.3)',
+          'Q4受双十一影响销售额环比增长40%',
+          '下季度预测销售额区间：210-245万元'
+        ],
+        tags: ['数据分析技术', '时间序列', '预测模型'],
+        course: 'data-analysis'
+      }
+    ];
+
+    var html = '';
+    reports.forEach(function(r) {
+      html += '<div class="report-card">' +
+        '<div class="report-header">' +
+          '<span class="report-icon">' + r.icon + '</span>' +
+          '<div>' +
+            '<h4>' + r.title + '</h4>' +
+            '<span style="font-size:12px;color:var(--text-secondary);">' + r.date + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<p style="font-size:13px;color:var(--text-secondary);margin:10px 0;">' + r.summary + '</p>' +
+        '<div style="margin:8px 0;"><strong style="font-size:13px;">关键发现：</strong>' +
+          '<ul style="padding-left:18px;margin:4px 0;">' +
+            r.findings.map(function(f) { return '<li style="font-size:12px;color:var(--text-secondary);">' + f + '</li>'; }).join('') +
+          '</ul>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
+          r.tags.map(function(t) { return '<span class="tag tag-blue">' + t + '</span>'; }).join('') +
+          '<a href="learning.html?course=' + r.course + '" class="tag tag-green" style="text-decoration:none;">→ 相关课程</a>' +
+        '</div>' +
+      '</div>';
+    });
+    reportGrid.innerHTML = html;
+  }
+
   renderSidebar(null, null);
   updateProgress();
   setupMobile();

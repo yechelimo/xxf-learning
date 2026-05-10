@@ -109,13 +109,15 @@ function renderLearning() {
       block.items.forEach(function(item) { html += '<li>' + item + '</li>'; });
       html += '</ul></div>';
     } else if (block.type === 'code') {
-      html += '<div class="card"><h4>示例代码</h4><div class="code-editor-wrap"><textarea readonly style="height:auto;min-height:100px;">' + block.code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>';
+      html += '<div class="card"><h4>示例代码</h4><div class="code-editor-wrap"><textarea readonly class="code-display" style="overflow:visible;resize:none;">' + block.code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>';
     }
   });
 
   html += '<div class="summary-box"><h4>本章重点总结</h4><p>请仔细阅读以上知识点，确保理解每个概念和代码示例。完成学习后点击"标记为已学完"记录进度。</p></div>';
   container.innerHTML = html;
   renderSidebar(course.id, chapterIdx);
+  // 渲染完成后自动调整代码框高度
+  setTimeout(autoResizeCodeBlocks, 50);
 }
 
 function toggleChapterComplete(cid, idx) {
@@ -123,6 +125,18 @@ function toggleChapterComplete(cid, idx) {
   renderLearning();
   updateProgress();
   renderSidebar(cid, idx);
+}
+
+// 自动调整代码框高度，完整显示代码（同时保留滚动功能）
+function autoResizeCodeBlocks() {
+  var textareas = document.querySelectorAll('textarea.code-display');
+  for (var i = 0; i < textareas.length; i++) {
+    var ta = textareas[i];
+    ta.style.height = 'auto';
+    ta.style.height = (ta.scrollHeight + 20) + 'px';
+    ta.style.maxHeight = '600px';  // 超长代码限制最大高度
+    ta.style.overflowY = ta.scrollHeight > 600 ? 'auto' : 'hidden';
+  }
 }
 
 renderLearning();

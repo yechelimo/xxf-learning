@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学习笔记 - 学生学习系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="notes">
+
+<nav class="navbar">
+  <div class="logo"><a href="index.html"><span>&#x1F4DA;</span> 学习系统</a></div>
+  <button class="menu-toggle" id="menuToggle">&#x2630;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" data-page="home">首页</a></li>
+    <li><a href="profile.html" data-page="profile">学生简介</a></li>
+    <li><a href="learning.html" data-page="learning">知识点学习</a></li>
+    <li><a href="practice.html" data-page="practice">专项练习</a></li>
+    <li><a href="exam.html" data-page="exam">在线考试</a></li>
+    <li><a href="notes.html" data-page="notes">学习笔记</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">课程章节目录</div>
+    <div class="course-group" id="sidebarCourses"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <div class="card">
+      <h2>学习笔记</h2>
+      <p>记录学习过程中的重点、心得和疑问。</p>
+    </div>
+    <div class="card">
+      <div class="notes-area">
+        <textarea id="notesTextarea" placeholder="在此记录学习笔记...&#10;&#10;例如：&#10;• 今日学习要点&#10;• 需要重点复习的知识点&#10;• 疑问和困惑&#10;• 学习心得"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-primary" onclick="saveNotes()">保存笔记</button>
+        <button class="btn btn-outline" onclick="clearNotes()">清空笔记</button>
+      </div>
+      <p style="margin-top:8px;font-size:12px;color:var(--text-secondary);" id="notesStatus">笔记自动保存在浏览器本地存储中</p>
+    </div>
+  </main>
+</div>
+
+<button id="mobileSidebarBtn">&#x2630; 目录</button>
+
+<script src="common.js"></script>
+<script>
+(function() {
+  var textarea = document.getElementById('notesTextarea');
+  var saved = localStorage.getItem('studyNotes') || '';
+  if (textarea) textarea.value = saved;
+
+  renderSidebar(null, null);
+  setupMobile();
+})();
+
+function saveNotes() {
+  var text = document.getElementById('notesTextarea').value;
+  localStorage.setItem('studyNotes', text);
+  var st = document.getElementById('notesStatus');
+  if (st) st.textContent = '✓ 笔记已保存（' + new Date().toLocaleTimeString('zh-CN') + '）';
+}
+
+function clearNotes() {
+  if (confirm('确定要清空所有笔记吗？此操作不可恢复。')) {
+    document.getElementById('notesTextarea').value = '';
+    localStorage.setItem('studyNotes', '');
+    var st = document.getElementById('notesStatus');
+    if (st) st.textContent = '笔记已清空';
+  }
+}
+</script>
+
+</body>
+</html>

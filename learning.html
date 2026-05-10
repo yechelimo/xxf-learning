@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识点学习 - 学生学习系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="learning">
+
+<nav class="navbar">
+  <div class="logo"><a href="index.html"><span>&#x1F4DA;</span> 学习系统</a></div>
+  <button class="menu-toggle" id="menuToggle">&#x2630;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" data-page="home">首页</a></li>
+    <li><a href="profile.html" data-page="profile">学生简介</a></li>
+    <li><a href="learning.html" data-page="learning">知识点学习</a></li>
+    <li><a href="practice.html" data-page="practice">专项练习</a></li>
+    <li><a href="exam.html" data-page="exam">在线考试</a></li>
+    <li><a href="notes.html" data-page="notes">学习笔记</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">课程章节目录</div>
+    <div class="course-group" id="sidebarCourses"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <div id="learningContent"></div>
+  </main>
+</div>
+
+<button id="mobileSidebarBtn">&#x2630; 目录</button>
+
+<script src="common.js"></script>
+<script>
+var courseId = getUrlParam('course');
+var chapterIdx = getUrlParam('chapter');
+if (chapterIdx !== null) chapterIdx = parseInt(chapterIdx);
+
+function renderLearning() {
+  var container = document.getElementById('learningContent');
+  var course = null;
+  if (courseId) {
+    for (var i = 0; i < courses.length; i++) {
+      if (courses[i].id === courseId) { course = courses[i]; break; }
+    }
+  }
+
+  if (!course) {
+    // 显示课程列表
+    var html = '<div class="card"><h2>知识点学习（核心模块）</h2><p>选择下方课程进入系统化学习，每门课程包含完整知识点、分章节内容讲解与重点难点总结。</p></div>';
+    courses.forEach(function(c) {
+      html += '<a href="learning.html?course=' + c.id + '" class="course-card">' +
+        '<div class="icon">' + c.icon + '</div>' +
+        '<h4>' + c.title + '</h4>' +
+        '<p>' + c.desc + '</p>' +
+        '<div style="margin-top:10px;"><span class="tag tag-blue">' + c.chapters.length + ' 个章节</span></div>' +
+      '</a>';
+    });
+    container.innerHTML = html;
+    renderSidebar(null, null);
+    return;
+  }
+
+  if (chapterIdx === null || isNaN(chapterIdx)) {
+    // 显示章节列表
+    var html = '<div class="card"><h2>' + course.icon + ' ' + course.title + '</h2><p>' + course.desc + '</p>' +
+      '<a href="learning.html" class="btn btn-outline btn-sm">← 返回课程列表</a></div>';
+    var completedChapters = getState('completedChapters', {});
+    course.chapters.forEach(function(ch, i) {
+      var done = completedChapters[course.id + '_' + i];
+      html += '<a href="learning.html?course=' + course.id + '&chapter=' + i + '" class="course-card" style="text-decoration:none;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+          '<h3 style="margin:0;color:var(--text);">' + ch.title + '</h3>' +
+          '<span class="tag ' + (done ? 'tag-green' : 'tag-blue') + '">' + (done ? '已完成' : '待学习') + '</span>' +
+        '</div></a>';
+    });
+    container.innerHTML = html;
+    renderSidebar(course.id, null);
+    return;
+  }
+
+  if (chapterIdx < 0 || chapterIdx >= course.chapters.length) {
+    container.innerHTML = '<div class="card"><h2>章节不存在</h2><a href="learning.html?course=' + course.id + '" class="btn btn-outline btn-sm">← 返回章节列表</a></div>';
+    return;
+  }
+
+  // 显示具体章节内容
+  var ch = course.chapters[chapterIdx];
+  var completedChapters = getState('completedChapters', {});
+  var done = completedChapters[course.id + '_' + chapterIdx];
+  var html = '<div class="card">' +
+    '<h2>' + ch.title + '</h2>' +
+    '<a href="learning.html?course=' + course.id + '" class="btn btn-outline btn-sm">← 返回章节列表</a> ' +
+    '<button class="btn btn-success btn-sm" onclick="toggleChapterComplete(\'' + course.id + '\', ' + chapterIdx + ')">' +
+      (done ? '✓ 已学完（点击取消）' : '标记为已学完') +
+    '</button>' +
+    '</div>';
+
+  ch.content.forEach(function(block) {
+    if (block.type === 'text') {
+      html += '<div class="card"><p>' + block.text + '</p></div>';
+    } else if (block.type === 'list') {
+      html += '<div class="knowledge-block"><h4>' + block.title + '</h4><ul>';
+      block.items.forEach(function(item) { html += '<li>' + item + '</li>'; });
+      html += '</ul></div>';
+    } else if (block.type === 'code') {
+      html += '<div class="card"><h4>示例代码</h4><div class="code-editor-wrap"><textarea readonly style="height:auto;min-height:100px;">' + block.code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>';
+    }
+  });
+
+  html += '<div class="summary-box"><h4>本章重点总结</h4><p>请仔细阅读以上知识点，确保理解每个概念和代码示例。完成学习后点击"标记为已学完"记录进度。</p></div>';
+  container.innerHTML = html;
+  renderSidebar(course.id, chapterIdx);
+}
+
+function toggleChapterComplete(cid, idx) {
+  markChapterComplete(cid, idx);
+  renderLearning();
+  updateProgress();
+  renderSidebar(cid, idx);
+}
+
+renderLearning();
+updateProgress();
+setupMobile();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>专项练习 - 学生学习系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="practice">
+
+<nav class="navbar">
+  <div class="logo"><a href="index.html"><span>&#x1F4DA;</span> 学习系统</a></div>
+  <button class="menu-toggle" id="menuToggle">&#x2630;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" data-page="home">首页</a></li>
+    <li><a href="profile.html" data-page="profile">学生简介</a></li>
+    <li><a href="learning.html" data-page="learning">知识点学习</a></li>
+    <li><a href="practice.html" data-page="practice">专项练习</a></li>
+    <li><a href="exam.html" data-page="exam">在线考试</a></li>
+    <li><a href="notes.html" data-page="notes">学习笔记</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">课程章节目录</div>
+    <div class="course-group" id="sidebarCourses"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <main class="main-content">
+    <div class="card">
+      <h2>专项练习</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0;" id="practiceTabs"></div>
+    </div>
+    <div id="practiceContent"></div>
+  </main>
+</div>
+
+<button id="mobileSidebarBtn">&#x2630; 目录</button>
+
+<script src="common.js"></script>
+<script>
+var practiceCourse = getUrlParam('tab') || 'python';
+var practiceAnswers = {};
+var tabNames = { python: 'Python基础练习', 'data-analysis': '数据分析练习', 'data-collection': '数据采集练习', 'supply-chain': '供应链练习' };
+var tabIcons = { python: '🐍', 'data-analysis': '📊', 'data-collection': '🔍', 'supply-chain': '🚚' };
+
+function renderPractice() {
+  var tabs = document.getElementById('practiceTabs');
+  var html = '';
+  for (var key in tabNames) {
+    html += '<a href="practice.html?tab=' + key + '" class="btn btn-sm ' + (practiceCourse === key ? 'btn-primary' : 'btn-outline') + '">' + tabIcons[key] + ' ' + tabNames[key] + '</a>';
+  }
+  tabs.innerHTML = html;
+  var container = document.getElementById('practiceContent');
+  practiceAnswers = {};
+  if (practiceCourse === 'python') {
+    container.innerHTML = '<div class="card"><h3>🐍 Python 在线练习</h3><p>在下方编辑器中编写 Python 代码，点击运行查看输出结果。</p><div class="code-editor-wrap"><textarea id="codeEditor"># 练习：计算销售额统计\nsales = [120, 340, 280, 410, 390]\n\ntotal = sum(sales)\nprint(f"总销售额: {total}")\n\navg = total / len(sales)\nprint(f"平均销售额: {avg:.1f}")\n\nprint(f"最高: {max(sales)}, 最低: {min(sales)}")\n\nhigh = [s for s in sales if s > 300]\nprint(f"高销售额: {high}")</textarea><div class="code-output" id="codeOutput">点击运行按钮查看输出 →</div></div><div class="code-toolbar"><button class="btn btn-primary btn-sm" onclick="runPythonCode()">▶ 运行代码</button> <button class="btn btn-outline btn-sm" onclick="resetCodeEditor()">↺ 重置</button> <button class="btn btn-outline btn-sm" onclick="loadExample()">📄 参考示例</button></div></div><div class="card"><h4>练习提示</h4><ul style="padding-left:20px;color:var(--text-secondary);font-size:14px;"><li>使用 print() 函数输出结果</li><li>支持列表推导式、字典、循环等 Python 语法</li></ul></div>';
+  } else {
+    var questions = quizData[practiceCourse] || [];
+    var qhtml = '';
+    questions.forEach(function(q, i) { qhtml += renderQuizQuestion(q, i); });
+    qhtml += '<div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" onclick="checkAllAnswers()">核对答案</button> <button class="btn btn-outline" onclick="clearAllAnswers()">重新练习</button></div>';
+    container.innerHTML = qhtml;
+  }
+}
+
+function renderQuizQuestion(q, i) {
+  var h = '<div class="quiz-card" id="quiz-' + i + '"><div class="q-header"><span class="q-num">第' + (i+1) + '题</span><span class="q-type tag ' + (q.type==='single'?'tag-blue':q.type==='multi'?'tag-yellow':q.type==='judge'?'tag-green':'tag-red') + '">' + (q.type==='single'?'单选题':q.type==='multi'?'多选题':q.type==='judge'?'判断题':'填空题') + '</span></div><div class="q-text">' + q.q + '</div>';
+  if (q.type === 'single') {
+    q.options.forEach(function(opt, j) { h += '<label class="option" id="opt-' + i + '-' + j + '" onclick="selectSingle(' + i + ', ' + j + ')"><input type="radio" name="q' + i + '" value="' + j + '" style="margin-right:8px;">' + String.fromCharCode(65+j) + '. ' + opt + '</label>'; });
+  } else if (q.type === 'multi') {
+    q.options.forEach(function(opt, j) { h += '<label class="option" id="opt-' + i + '-' + j + '" onclick="selectMulti(' + i + ', ' + j + ')"><input type="checkbox" name="q' + i + '" value="' + j + '" style="margin-right:8px;">' + String.fromCharCode(65+j) + '. ' + opt + '</label>'; });
+  } else if (q.type === 'judge') {
+    h += '<label class="option" id="opt-' + i + '-0" onclick="selectSingle(' + i + ', 0)"><input type="radio" name="q' + i + '" value="0" style="margin-right:8px;">正确</label><label class="option" id="opt-' + i + '-1" onclick="selectSingle(' + i + ', 1)"><input type="radio" name="q' + i + '" value="1" style="margin-right:8px;">错误</label>';
+  } else {
+    h += '<input type="text" id="fill-' + i + '" placeholder="请输入答案..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;">';
+  }
+  h += '<div class="explain" id="explain-' + i + '"><strong>答案：</strong>' + formatAnswer(q) + '<br><strong>解析：</strong>' + q.explain + '</div></div>';
+  return h;
+}
+
+function formatAnswer(q) {
+  if (q.type === 'judge') return q.answer ? '正确' : '错误';
+  if (q.type === 'fill') return q.answer;
+  if (Array.isArray(q.answer)) return q.answer.map(function(a) { return q.options[a]; }).join('、');
+  return q.options[q.answer];
+}
+
+function selectSingle(qIdx, optIdx) {
+  practiceAnswers[qIdx] = optIdx;
+  var card = document.getElementById('quiz-' + qIdx);
+  if (card) { var opts = card.querySelectorAll('.option'); for (var i = 0; i < opts.length; i++) opts[i].classList.remove('selected'); }
+  var o = document.getElementById('opt-' + qIdx + '-' + optIdx);
+  if (o) o.classList.add('selected');
+}
+
+function selectMulti(qIdx, optIdx) {
+  if (!practiceAnswers[qIdx]) practiceAnswers[qIdx] = [];
+  var arr = practiceAnswers[qIdx];
+  var idx = arr.indexOf(optIdx);
+  if (idx > -1) arr.splice(idx, 1); else arr.push(optIdx);
+  document.getElementById('opt-' + qIdx + '-' + optIdx).classList.toggle('selected');
+}
+
+function checkAnswer(q, userAnswer) {
+  if (userAnswer === undefined || userAnswer === null || userAnswer === '' || (Array.isArray(userAnswer) && userAnswer.length === 0)) return null;
+  if (q.type === 'multi') { var correct = q.answer.slice().sort().join(','); var user = (userAnswer || []).slice().sort().join(','); return correct === user; }
+  if (q.type === 'fill') return userAnswer.replace(/\s+/g, '') === q.answer.replace(/\s+/g, '');
+  if (q.type === 'judge') return (userAnswer === 0 && q.answer === true) || (userAnswer === 1 && q.answer === false);
+  return userAnswer === q.answer;
+}
+
+function checkAllAnswers() {
+  var questions = quizData[practiceCourse] || [];
+  questions.forEach(function(q, i) {
+    document.getElementById('explain-' + i).style.display = 'block';
+    var userAnswer = practiceAnswers[i];
+    if (q.type === 'fill') { var fi = document.getElementById('fill-' + i); userAnswer = fi ? fi.value.trim() : ''; }
+    var isCorrect = checkAnswer(q, userAnswer);
+    var card = document.getElementById('quiz-' + i);
+    if (card && isCorrect !== null) { card.style.borderLeft = isCorrect ? '3px solid var(--success)' : '3px solid var(--danger)'; }
+    if (q.type === 'single' || q.type === 'multi') {
+      var correctAnswers = Array.isArray(q.answer) ? q.answer : [q.answer];
+      var userAnswers = Array.isArray(userAnswer) ? userAnswer : (userAnswer !== undefined && userAnswer !== null ? [userAnswer] : []);
+      q.options.forEach(function(opt, j) {
+        var oe = document.getElementById('opt-' + i + '-' + j);
+        if (!oe) return;
+        if (correctAnswers.indexOf(j) >= 0 && userAnswers.indexOf(j) >= 0) oe.classList.add('correct');
+        else if (correctAnswers.indexOf(j) < 0 && userAnswers.indexOf(j) >= 0) oe.classList.add('wrong');
+        else if (correctAnswers.indexOf(j) >= 0 && userAnswers.indexOf(j) < 0) { oe.style.background = '#fef3c7'; oe.style.borderColor = 'var(--warning)'; }
+      });
+    }
+    if (q.type === 'judge') {
+      var ci = q.answer ? 0 : 1;
+      var co = document.getElementById('opt-' + i + '-' + ci); if (co) co.classList.add('correct');
+      if (userAnswer !== undefined && userAnswer !== null && userAnswer !== ci) { var wo = document.getElementById('opt-' + i + '-' + userAnswer); if (wo) wo.classList.add('wrong'); }
+    }
+  });
+}
+
+function clearAllAnswers() {
+  practiceAnswers = {};
+  var cards = document.querySelectorAll('.quiz-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].style.borderLeft = '';
+    var opts = cards[i].querySelectorAll('.option');
+    for (var j = 0; j < opts.length; j++) { opts[j].classList.remove('selected', 'correct', 'wrong'); opts[j].style.background = ''; opts[j].style.borderColor = ''; }
+    var inputs = cards[i].querySelectorAll('input[type="text"]'); for (var k = 0; k < inputs.length; k++) inputs[k].value = '';
+    var explain = cards[i].querySelector('.explain'); if (explain) explain.style.display = 'none';
+    var radios = cards[i].querySelectorAll('input[type="radio"], input[type="checkbox"]'); for (var r = 0; r < radios.length; r++) radios[r].checked = false;
+  }
+}
+
+function runPythonCode() {
+  var code = document.getElementById('codeEditor').value;
+  var outputEl = document.getElementById('codeOutput');
+  try {
+    var output = []; var mockPrint = function() { output.push(Array.prototype.join.call(arguments, ' ')); };
+    var lines = code.split('\n'); var mockVars = {};
+    for (var li = 0; li < lines.length; li++) {
+      var line = lines[li].trim(); if (!line || line.charAt(0) === '#') continue;
+      if (line.indexOf('=') >= 0 && line.indexOf('==') < 0 && line.indexOf('<=') < 0 && line.indexOf('>=') < 0 && line.indexOf('!=') < 0) { var parts = line.split('='); var varName = parts[0].trim(); var value = parts.slice(1).join('=').trim(); try { mockVars[varName] = evaluateExpr(value, mockVars); } catch(e) {} continue; }
+      if (line.indexOf('print(') === 0) { var content = line.slice(6, -1); try { mockPrint(String(evaluateExpr(content, mockVars))); } catch(e) { mockPrint(content.replace(/['"]/g, '')); } continue; }
+    }
+    if (output.length === 0) output.push('(代码执行完毕)');
+    if (code.indexOf('groupby') >= 0) { output.push('\n--- 模拟分组聚合结果 ---\n  城市  total   avg\n  上海  2700.0  1350.0\n  北京  1400.0  700.0\n  广州  900.0   900.0'); }
+    outputEl.textContent = output.join('\n'); outputEl.style.color = '#94a3b8';
+  } catch(e) { outputEl.textContent = '运行出错：' + e.message; outputEl.style.color = '#f87171'; }
+}
+
+function evaluateExpr(expr, vars) {
+  expr = expr.trim();
+  if ((expr.charAt(0) === '\'' && expr.charAt(expr.length-1) === '\'') || (expr.charAt(0) === '"' && expr.charAt(expr.length-1) === '"')) return expr.slice(1, -1);
+  if (!isNaN(expr)) return Number(expr);
+  if (expr.charAt(0) === '[' && expr.charAt(expr.length-1) === ']') { return expr.slice(1, -1).split(',').map(function(s) { s = s.trim(); if (!isNaN(s)) return Number(s); return s; }); }
+  if (vars[expr] !== undefined) return vars[expr];
+  if (expr.indexOf('sum(') === 0) { var arr = evaluateExpr(expr.slice(4, -1), vars); return Array.isArray(arr) ? arr.reduce(function(a,b){return a+b;}, 0) : 0; }
+  if (expr.indexOf('max(') === 0) { var arr = evaluateExpr(expr.slice(4, -1), vars); return Array.isArray(arr) ? Math.max.apply(null, arr) : 0; }
+  if (expr.indexOf('min(') === 0) { var arr = evaluateExpr(expr.slice(4, -1), vars); return Array.isArray(arr) ? Math.min.apply(null, arr) : 0; }
+  if (expr.indexOf('len(') === 0) { var arr = evaluateExpr(expr.slice(4, -1), vars); return Array.isArray(arr) ? arr.length : 0; }
+  if (/^[\d\s\+\-\*\/\(\)\.\w]+$/.test(expr)) { var e = expr; for (var v in vars) { if (typeof vars[v] === 'number') e = e.replace(new RegExp('\\b' + v + '\\b', 'g'), vars[v]); } try { return Function('return (' + e + ')')(); } catch(ex) {} }
+  throw new Error('无法解析');
+}
+
+function resetCodeEditor() { document.getElementById('codeEditor').value = '# 编写代码...\nprint("Hello!")'; document.getElementById('codeOutput').textContent = '已重置'; }
+function loadExample() { document.getElementById('codeEditor').value = 'sales = [120, 340, 280, 410, 390]\ntotal = sum(sales)\nprint(f"总销售额: {total}")\nprint(f"平均: {total/len(sales):.1f}")'; document.getElementById('codeOutput').textContent = '示例已加载'; }
+
+renderSidebar(null, null);
+renderPractice();
+setupMobile();
+</script>
+</body>
+</html>

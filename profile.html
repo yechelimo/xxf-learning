@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学生简介 - 学生学习系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="profile">
+
+<nav class="navbar">
+  <div class="logo"><a href="index.html"><span>&#x1F4DA;</span> 学习系统</a></div>
+  <button class="menu-toggle" id="menuToggle">&#x2630;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" data-page="home">首页</a></li>
+    <li><a href="profile.html" data-page="profile">学生简介</a></li>
+    <li><a href="learning.html" data-page="learning">知识点学习</a></li>
+    <li><a href="practice.html" data-page="practice">专项练习</a></li>
+    <li><a href="exam.html" data-page="exam">在线考试</a></li>
+    <li><a href="notes.html" data-page="notes">学习笔记</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">课程章节目录</div>
+    <div class="course-group" id="sidebarCourses"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <main class="main-content">
+    <div class="card">
+      <h2>学生个人简介</h2>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;">
+        <div style="width:100px;height:100px;background:var(--primary-light);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;">&#x1F468;&#x200D;&#x1F393;</div>
+        <div style="flex:1;min-width:200px;">
+          <table class="data-table" style="margin-bottom:0;">
+            <tr><td style="font-weight:600;">姓名</td><td>徐晓帆</td></tr>
+            <tr><td style="font-weight:600;">专业</td><td>商务数据分析与应用</td></tr>
+            <tr><td style="font-weight:600;">学习方向</td><td>供应链数据分析、商业智能、数据科学</td></tr>
+            <tr><td style="font-weight:600;">掌握技能</td><td>Python、Pandas、SQL、数据可视化、机器学习基础</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>个人学习介绍</h3>
+      <p>我是一名商务数据分析与应用专业的学生，专注于利用数据驱动的方法解决实际供应链和商业问题。通过系统化的学习，我掌握了从数据采集、清洗、加工到分析挖掘的完整数据处理流程。</p>
+    </div>
+    <div class="card">
+      <h3>长期学习目标</h3>
+      <ul style="padding-left:20px;color:var(--text-secondary);">
+        <li>精通 Python 数据科学技术栈（Pandas、NumPy、Matplotlib、Scikit-learn）</li>
+        <li>掌握供应链全链条数据分析方法，能够独立完成业务分析项目</li>
+        <li>熟悉数据采集、清洗、加工、建模的完整工作流</li>
+        <li>具备独立完成数据分析报告和可视化呈现的能力</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>学习进度总览</h3>
+      <div id="profileProgress"></div>
+    </div>
+  </main>
+</div>
+
+<button id="mobileSidebarBtn">&#x2630; 目录</button>
+
+<script src="common.js"></script>
+<script>
+(function() {
+  var container = document.getElementById('profileProgress');
+  if (!container) return;
+  var html = '';
+  courses.forEach(function(c) {
+    var completed = 0;
+    var completedChapters = getState('completedChapters', {});
+    c.chapters.forEach(function(ch, i) {
+      if (completedChapters[c.id + '_' + i]) completed++;
+    });
+    var pct = c.chapters.length > 0 ? Math.round(completed / c.chapters.length * 100) : 0;
+    html += '<div class="progress-label" style="margin-top:8px;">' +
+      '<span>' + c.icon + ' ' + c.title + '</span>' +
+      '<span>' + completed + '/' + c.chapters.length + ' 章 · ' + pct + '%</span>' +
+      '</div>' +
+      '<div class="progress-bar"><div class="fill" style="width:' + pct + '%;"></div></div>';
+  });
+  container.innerHTML = html;
+  renderSidebar(null, null);
+  updateProgress();
+  setupMobile();
+})();
+</script>
+
+</body>
+</html>

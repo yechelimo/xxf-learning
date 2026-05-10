@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线考试 - 学生学习系统</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="exam">
+
+<nav class="navbar">
+  <div class="logo"><a href="index.html"><span>&#x1F4DA;</span> 学习系统</a></div>
+  <button class="menu-toggle" id="menuToggle">&#x2630;</button>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html" data-page="home">首页</a></li>
+    <li><a href="profile.html" data-page="profile">学生简介</a></li>
+    <li><a href="learning.html" data-page="learning">知识点学习</a></li>
+    <li><a href="practice.html" data-page="practice">专项练习</a></li>
+    <li><a href="exam.html" data-page="exam">在线考试</a></li>
+    <li><a href="notes.html" data-page="notes">学习笔记</a></li>
+  </ul>
+</nav>
+
+<div class="page-wrapper">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-title">课程章节目录</div>
+    <div class="course-group" id="sidebarCourses"></div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <main class="main-content">
+    <div id="examContent"></div>
+  </main>
+</div>
+
+<button id="mobileSidebarBtn">&#x2630; 目录</button>
+
+<script src="common.js"></script>
+<script>
+// 生成考试题目（随机打乱）
+var examQuestions = [];
+for (var course in quizData) {
+  quizData[course].forEach(function(q) { examQuestions.push({q: q, course: course}); });
+}
+for (var i = examQuestions.length - 1; i > 0; i--) {
+  var j = Math.floor(Math.random() * (i + 1));
+  var tmp = examQuestions[i]; examQuestions[i] = examQuestions[j]; examQuestions[j] = tmp;
+}
+
+var examState = {
+  started: false,
+  submitted: false,
+  timeLeft: 1800,
+  answers: {},
+  currentQ: 0,
+  timer: null
+};
+
+function renderExam() {
+  var container = document.getElementById('examContent');
+
+  if (!examState.started) {
+    var historyHtml = '';
+    var examHistory = getState('examHistory', []);
+    if (examHistory.length > 0) {
+      historyHtml = '<div style="margin-top:20px;text-align:left;"><h4>历史成绩记录</h4><table class="data-table"><tr><th>日期</th><th>得分</th><th>正确/总题</th></tr>';
+      examHistory.slice(-5).reverse().forEach(function(h) {
+        historyHtml += '<tr><td>' + h.date + '</td><td>' + h.score + '分</td><td>' + h.correct + '/' + h.total + '</td></tr>';
+      });
+      historyHtml += '</table></div>';
+    }
+    container.innerHTML = '<div class="card exam-header"><h2>📝 综合在线考试</h2><p>整合四门课程全部知识点题库，共 ' + examQuestions.length + ' 道题目</p><p style="color:var(--text-secondary);">考试时间：30 分钟 | 题型：单选、多选、判断、填空</p><button class="btn btn-primary" style="margin-top:16px;font-size:16px;padding:10px 30px;" onclick="startExam()">开始考试</button>' + historyHtml + '</div>';
+    return;
+  }
+
+  if (examState.submitted) {
+    showExamResult(container);
+    return;
+  }
+
+  // 答题中
+  var qIdx = examState.currentQ;
+  var q = examQuestions[qIdx].q;
+  container.innerHTML = '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;"><h3>在线考试中...</h3><div class="timer" id="examTimer">' + formatTime(examState.timeLeft) + '</div></div></div>' +
+    '<div class="quiz-card" id="exam-quiz-' + qIdx + '">' +
+      '<div class="q-header"><span class="q-num">第' + (qIdx+1) + '题 / 共' + examQuestions.length + '题</span>' +
+      '<span class="q-type tag ' + (q.type==='single'?'tag-blue':q.type==='multi'?'tag-yellow':q.type==='judge'?'tag-green':'tag-red') + '">' +
+      (q.type==='single'?'单选题':q.type==='multi'?'多选题':q.type==='judge'?'判断题':'填空题') + '</span></div>' +
+      '<div class="q-text">' + q.q + '</div>' +
+      renderExamOptions(q, qIdx) +
+    '</div>' +
+    '<div class="exam-nav">' +
+      '<button class="btn btn-outline" onclick="prevExamQ()"' + (qIdx === 0 ? ' disabled' : '') + '>← 上一题</button>' +
+      '<span class="q-indicator">' + (qIdx+1) + ' / ' + examQuestions.length + '</span>' +
+      '<button class="btn btn-outline" onclick="nextExamQ()">' + (qIdx === examQuestions.length - 1 ? '提交试卷' : '下一题 →') + '</button>' +
+    '</div>' +
+    '<button class="btn btn-danger" style="width:100%;margin-top:12px;" onclick="submitExam()">提交试卷</button>';
+  restoreExamUI(q, qIdx);
+}
+
+function renderExamOptions(q, qIdx) {
+  var h = '';
+  if (q.type === 'single') {
+    q.options.forEach(function(opt, j) { h += '<label class="option" id="exam-opt-' + qIdx + '-' + j + '" onclick="selectExamSingle(' + qIdx + ', ' + j + ')"><input type="radio" name="exam-q' + qIdx + '" value="' + j + '" style="margin-right:8px;">' + String.fromCharCode(65+j) + '. ' + opt + '</label>'; });
+  } else if (q.type === 'multi') {
+    q.options.forEach(function(opt, j) { h += '<label class="option" id="exam-opt-' + qIdx + '-' + j + '" onclick="selectExamMulti(' + qIdx + ', ' + j + ')"><input type="checkbox" name="exam-q' + qIdx + '" value="' + j + '" style="margin-right:8px;">' + String.fromCharCode(65+j) + '. ' + opt + '</label>'; });
+  } else if (q.type === 'judge') {
+    h += '<label class="option" id="exam-opt-' + qIdx + '-0" onclick="selectExamSingle(' + qIdx + ', 0)"><input type="radio" name="exam-q' + qIdx + '" value="0" style="margin-right:8px;">正确</label><label class="option" id="exam-opt-' + qIdx + '-1" onclick="selectExamSingle(' + qIdx + ', 1)"><input type="radio" name="exam-q' + qIdx + '" value="1" style="margin-right:8px;">错误</label>';
+  } else {
+    h += '<input type="text" id="exam-fill-' + qIdx + '" placeholder="请输入答案..." style="width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;">';
+  }
+  return h;
+}
+
+function selectExamSingle(qIdx, optIdx) {
+  examState.answers[qIdx] = optIdx;
+  var card = document.getElementById('exam-quiz-' + qIdx);
+  if (card) { var opts = card.querySelectorAll('.option'); for (var i = 0; i < opts.length; i++) opts[i].classList.remove('selected'); }
+  var o = document.getElementById('exam-opt-' + qIdx + '-' + optIdx);
+  if (o) o.classList.add('selected');
+}
+
+function selectExamMulti(qIdx, optIdx) {
+  if (!examState.answers[qIdx]) examState.answers[qIdx] = [];
+  var arr = examState.answers[qIdx];
+  var idx = arr.indexOf(optIdx);
+  if (idx > -1) arr.splice(idx, 1); else arr.push(optIdx);
+  document.getElementById('exam-opt-' + qIdx + '-' + optIdx).classList.toggle('selected');
+}
+
+function saveExamAnswer(qIdx) {
+  var q = examQuestions[qIdx].q;
+  if (q.type === 'fill') { var input = document.getElementById('exam-fill-' + qIdx); examState.answers[qIdx] = input ? input.value.trim() : ''; }
+  else if (q.type === 'multi') { var cb = document.querySelectorAll('input[name="exam-q' + qIdx + '"]:checked'); examState.answers[qIdx] = Array.from(cb).map(function(c) { return parseInt(c.value); }); }
+  else { var sel = document.querySelector('input[name="exam-q' + qIdx + '"]:checked'); examState.answers[qIdx] = sel ? parseInt(sel.value) : null; }
+}
+
+function restoreExamUI(q, qIdx) {
+  if (examState.answers[qIdx] === undefined || examState.answers[qIdx] === null) return;
+  if (q.type === 'multi') {
+    (examState.answers[qIdx] || []).forEach(function(v) { document.getElementById('exam-opt-' + qIdx + '-' + v).classList.add('selected'); });
+  } else if (q.type === 'fill') {
+    var input = document.getElementById('exam-fill-' + qIdx); if (input) input.value = examState.answers[qIdx];
+  } else {
+    document.getElementById('exam-opt-' + qIdx + '-' + examState.answers[qIdx]).classList.add('selected');
+  }
+}
+
+function startExam() {
+  examState.started = true;
+  examState.submitted = false;
+  examState.answers = {};
+  examState.timeLeft = 1800;
+  examState.currentQ = 0;
+  if (examState.timer) clearInterval(examState.timer);
+  examState.timer = setInterval(function() {
+    examState.timeLeft--;
+    var el = document.getElementById('examTimer'); if (el) el.textContent = formatTime(examState.timeLeft);
+    if (examState.timeLeft <= 300 && el) el.style.color = 'var(--danger)';
+    if (examState.timeLeft <= 0) { clearInterval(examState.timer); submitExam(); }
+  }, 1000);
+  renderExam();
+}
+
+function nextExamQ() {
+  saveExamAnswer(examState.currentQ);
+  if (examState.currentQ === examQuestions.length - 1) { submitExam(); return; }
+  examState.currentQ++;
+  renderExam();
+}
+
+function prevExamQ() {
+  if (examState.currentQ > 0) { saveExamAnswer(examState.currentQ); examState.currentQ--; renderExam(); }
+}
+
+function submitExam() {
+  saveExamAnswer(examState.currentQ);
+  if (examState.timer) clearInterval(examState.timer);
+  examState.submitted = true;
+  var correct = 0;
+  examQuestions.forEach(function(eq, i) {
+    if (checkExamAnswer(eq.q, examState.answers[i])) correct++;
+  });
+  var score = Math.round(correct / examQuestions.length * 100);
+  var examHistory = getState('examHistory', []);
+  examHistory.push({ date: new Date().toLocaleDateString('zh-CN'), score: score, correct: correct, total: examQuestions.length });
+  setState('examHistory', examHistory);
+  renderExam();
+}
+
+function checkExamAnswer(q, userAnswer) {
+  if (userAnswer === undefined || userAnswer === null || userAnswer === '') return false;
+  if (q.type === 'multi') { var correct = q.answer.slice().sort().join(','); var user = (userAnswer || []).slice().sort().join(','); return correct === user; }
+  if (q.type === 'fill') return userAnswer.replace(/\s+/g, '') === q.answer.replace(/\s+/g, '');
+  if (q.type === 'judge') return (userAnswer === 0 && q.answer === true) || (userAnswer === 1 && q.answer === false);
+  return userAnswer === q.answer;
+}
+
+function showExamResult(container) {
+  var correct = 0; var wrongQuestions = [];
+  examQuestions.forEach(function(eq, i) {
+    if (checkExamAnswer(eq.q, examState.answers[i])) correct++;
+    else wrongQuestions.push({q: eq.q, idx: i});
+  });
+  var score = Math.round(correct / examQuestions.length * 100);
+  var html = '<div class="card score-card"><h2>考试完成！</h2><div class="score">' + score + '</div><p style="font-size:18px;">正确 ' + correct + ' / ' + examQuestions.length + ' 题</p>';
+  if (score >= 80) html += '<p style="color:var(--success);">🎉 优秀！你对知识点掌握得很好！</p>';
+  else if (score >= 60) html += '<p style="color:var(--warning);">📖 不错，继续加油！</p>';
+  else html += '<p style="color:var(--danger);">📚 需要加强学习，建议回顾各章节。</p>';
+  html += '</div>';
+
+  if (wrongQuestions.length > 0) {
+    html += '<div class="card"><h3>错题汇总（' + wrongQuestions.length + ' 道）</h3>';
+    wrongQuestions.forEach(function(wq) {
+      var userAnswer = examState.answers[wq.idx];
+      html += '<div class="quiz-card"><p><strong>第' + (wq.idx+1) + '题</strong> <span class="tag tag-red">答错</span></p><p>' + wq.q.q + '</p>' +
+        '<p style="color:var(--danger);">你的答案：' + formatExamAnswer(wq.q, userAnswer) + '</p>' +
+        '<p style="color:var(--success);">正确答案：' + formatExamCorrectAnswer(wq.q) + '</p>' +
+        '<p style="color:var(--text-secondary);">解析：' + wq.q.explain + '</p></div>';
+    });
+    html += '</div>';
+  }
+  html += '<button class="btn btn-primary" onclick="examState.started=false;examState.submitted=false;examState.answers={};renderExam();">重新考试</button>';
+  container.innerHTML = html;
+}
+
+function formatExamAnswer(q, ans) {
+  if (ans === undefined || ans === null || ans === '') return '（未作答）';
+  if (q.type === 'multi') return (ans || []).map(function(a) { return q.options[a]; }).join('、');
+  if (q.type === 'judge') return ans === 0 ? '正确' : '错误';
+  if (q.type === 'fill') return ans;
+  return q.options[ans];
+}
+
+function formatExamCorrectAnswer(q) {
+  if (q.type === 'multi') return q.answer.map(function(a) { return q.options[a]; }).join('、');
+  if (q.type === 'judge') return q.answer ? '正确' : '错误';
+  if (q.type === 'fill') return q.answer;
+  return q.options[q.answer];
+}
+
+function formatTime(seconds) {
+  var m = Math.floor(seconds / 60); var s = seconds % 60;
+  return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+renderSidebar(null, null);
+renderExam();
+setupMobile();
+</script>
+</body>
+</html>

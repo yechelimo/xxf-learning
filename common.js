@@ -1607,6 +1607,74 @@ function setupMobile() {
     }
   }
 }
+// ==================== 返回顶部按钮 ====================
+(function() {
+  if (document.getElementById('backToTop')) return;
+  var btn = document.createElement('button');
+  btn.id = 'backToTop';
+  btn.innerHTML = '↑';
+  btn.title = '返回顶部';
+  btn.onclick = function() { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  document.body.appendChild(btn);
+
+  window.addEventListener('scroll', function() {
+    if (window.scrollY > 300) { btn.classList.add('show'); }
+    else { btn.classList.remove('show'); }
+  });
+})();
+
+// ==================== 代码块复制功能 ====================
+function copyCode(btn) {
+  var textarea = btn.parentElement.parentElement.querySelector('textarea');
+  if (!textarea) return;
+  var code = textarea.value || textarea.textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).then(function() {
+      btn.textContent = '✓ 已复制';
+      setTimeout(function() { btn.textContent = '📋 复制代码'; }, 2000);
+    });
+  } else {
+    // 降级方案
+    textarea.select();
+    document.execCommand('copy');
+    btn.textContent = '✓ 已复制';
+    setTimeout(function() { btn.textContent = '📋 复制代码'; }, 2000);
+  }
+}
+
+// ==================== 侧边栏折叠状态记忆 ====================
+function toggleSidebarCourse(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+  // 记住状态
+  var courseTitle = header.querySelector('span').textContent.trim();
+  var openCourses = getState('openSidebarCourses', []);
+  var idx = openCourses.indexOf(courseTitle);
+  if (idx > -1) { openCourses.splice(idx, 1); }
+  else { openCourses.push(courseTitle); }
+  setState('openSidebarCourses', openCourses);
+}
+
+// 恢复侧边栏折叠状态
+function restoreSidebarState() {
+  var openCourses = getState('openSidebarCourses', []);
+  var headers = document.querySelectorAll('.sidebar .course-header');
+  for (var i = 0; i < headers.length; i++) {
+    var h = headers[i];
+    var title = h.querySelector('span').textContent.trim();
+    if (openCourses.indexOf(title) > -1) {
+      h.classList.add('open');
+      h.nextElementSibling.classList.add('open');
+    }
+  }
+}
+// 在 renderSidebar 调用后恢复
+var origRenderSidebar = renderSidebar;
+renderSidebar = function(course, chapter) {
+  origRenderSidebar(course, chapter);
+  setTimeout(restoreSidebarState, 100);
+};
+
 
 function getUrlParam(name) {
   var params = new URLSearchParams(window.location.search);

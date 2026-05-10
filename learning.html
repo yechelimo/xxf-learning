@@ -110,7 +110,7 @@ function renderLearning() {
       block.items.forEach(function(item) { html += '<li>' + item + '</li>'; });
       html += '</ul></div>';
     } else if (block.type === 'code') {
-      html += '<div class="card"><h4>示例代码</h4><div class="code-editor-wrap"><textarea readonly class="code-display" style="overflow:visible;resize:none;">' + block.code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>';
+      html += '<div class="card"><h4>示例代码</h4><div class="code-editor-wrap"><button class="copy-code-btn" onclick="copyCode(this)">📋 复制代码</button><textarea readonly class="code-display" style="overflow:visible;resize:none;">' + block.code.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</textarea></div></div>';
     }
   });
 
